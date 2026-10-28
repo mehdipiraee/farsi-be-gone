@@ -1,7 +1,18 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>fixture</title>
-<link rel="stylesheet" href="../content.css"></head>
+<link rel="stylesheet" href="../content.css"><style>#feed>div{padding:12px;border:1px solid #ccc;margin:8px;font:18px system-ui}</style></head>
 <body>
+<div id="controls" style="font:16px system-ui;padding:12px;background:#0e5aa8;color:#fff;display:flex;gap:12px;align-items:center">
+  <b>Farsi Be Gone - mock feed test</b>
+  <button onclick="window.__onChanged({enabled:{newValue:true}})">Filter ON</button>
+  <button onclick="window.__onChanged({enabled:{newValue:false}})">Filter OFF</button>
+  <button onclick="addLate()">Add Farsi post (scroll simulation)</button>
+  <span id="count"></span>
+</div>
+<script>
+function addLate(){const d=document.createElement('div');d.className='feed-shared-update-v2';d.textContent='پست جدید فارسی که بعد از بارگذاری اضافه شد';d.style.cssText='padding:12px;border:1px solid #ccc;margin:8px';document.getElementById('feed').appendChild(d)}
+setInterval(()=>{const all=document.querySelectorAll('.feed-shared-update-v2,[data-view-name]');const hid=[...all].filter(e=>getComputedStyle(e).display==='none').length;document.getElementById('count').textContent='posts: '+all.length+' | hidden: '+hid},300);
+</script>
 <div id="feed">
   <div class="feed-shared-update-v2" id="p-en">Excited to announce our new product launch!</div>
   <div class="feed-shared-update-v2" id="p-fa">امروز یک پست فارسی گذاشتم برای شما، امیدوارم خوشتان بیاید</div>
