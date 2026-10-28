@@ -1,0 +1,29 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Farsi Be Gone screenshot</title>
+<link rel="stylesheet" href="../content.css">
+<style>
+ body{margin:0;width:1280px;height:800px;background:#f3f2ef;font:16px -apple-system,Segoe UI,sans-serif;color:#222;display:flex;overflow:hidden}
+ .side{width:420px;padding:60px 40px;background:#0e5aa8;color:#fff;box-sizing:border-box}
+ .side h1{font-size:48px;margin:0 0 16px}.side p{font-size:22px;line-height:1.4;opacity:.95}
+ .badge{display:inline-block;margin-top:24px;background:#fff;color:#0e5aa8;border-radius:24px;padding:10px 18px;font-weight:600}
+ .feed{flex:1;padding:40px 60px;box-sizing:border-box}
+ .feed h2{margin:0 0 20px;font-size:20px;color:#555}
+ .post{background:#fff;border-radius:10px;padding:20px 24px;margin-bottom:18px;box-shadow:0 1px 3px #0002}
+ .post b{display:block;margin-bottom:6px}
+ .fbg-placeholder{font-size:17px;padding:16px 20px}
+ .fbg-placeholder .fbg-emoji{font-size:28px}
+ .fbg-placeholder button{font-size:16px;padding:6px 16px}
+</style></head>
+<body>
+<div class="side"><h1>Farsi Be Gone</h1><p>Hides Farsi-language posts from your LinkedIn feed and leaves a fun placeholder instead.</p><span class="badge">Peek: see it if you like</span></div>
+<div class="feed"><h2>Your feed (illustrative)</h2>
+ <div class="feed-shared-update-v2 post"><b>Alex Morgan</b>Excited to announce our new product launch this quarter!</div>
+ <div class="feed-shared-update-v2 post"><b>Sara K.</b>امروز یک پست فارسی گذاشتم برای شما، امیدوارم خوشتان بیاید</div>
+ <div class="feed-shared-update-v2 post"><b>Jordan Lee</b>Three lessons from shipping a browser extension in a weekend.</div>
+ <div class="feed-shared-update-v2 post"><b>Reza T.</b>سلام دوستان، من دنبال کار می‌گردم و تجربه زیادی دارم</div>
+ <div class="feed-shared-update-v2 post"><b>Maya Chen</b>We're hiring! Come build something fun with a small, friendly team.</div>
+ <div class="feed-shared-update-v2 post"><b>Nima R.</b>امروز جلسه خیلی خوبی داشتیم و درباره آینده پروژه صحبت کردیم</div>
+</div>
+<script>window.chrome={storage:{sync:{get:(d,cb)=>cb(d)},onChanged:{addListener(){}}}};</script>
+<script src="../detect.js"></script><script src="../content.js"></script>
+<script>const t=setInterval(()=>{const b=document.querySelectorAll('.fbg-placeholder button')[1];if(b){b.click();clearInterval(t)}},40)</script></body></html>
