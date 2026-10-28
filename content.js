@@ -18,7 +18,9 @@ function scan() {
       post.removeAttribute(HIDDEN_ATTR);
       continue;
     }
-    const text = post.innerText || "";
+    // textContent (not innerText) so the result is the same whether or not the post is currently
+    // hidden; innerText differs for display:none elements and made hidden posts flicker.
+    const text = post.textContent || "";
     // LinkedIn renders posts lazily; skip posts whose text hasn't changed since last check.
     if (checkedLength.get(post) === text.length) continue;
     checkedLength.set(post, text.length);
