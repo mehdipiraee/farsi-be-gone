@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Farsi Be Gone",
+  "version": "0.1.0",
+  "description": "Hides Farsi-language posts from your LinkedIn feed.",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/*"],
+      "js": ["detect.js", "content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Farsi Be Gone",
+    "default_popup": "popup.html"
+  }
+}
