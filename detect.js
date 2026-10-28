@@ -8,11 +8,15 @@
   // minimum count keeps a single quoted Farsi word in an English post from being hidden.
   const MIN_RATIO = 0.2;
   const MIN_ARABIC_LETTERS = 20;
+  // Bilingual posts (a Farsi paragraph plus an English one) are hidden too once the Farsi part
+  // is substantial, whatever the ratio.
+  const SUBSTANTIAL_ARABIC_LETTERS = 100;
 
   globalThis.isFarsi = (text) => {
     if (!text) return false;
     const arabic = (text.match(ARABIC_SCRIPT) || []).length;
     if (arabic < MIN_ARABIC_LETTERS || !PERSIAN_MARKER.test(text)) return false;
+    if (arabic >= SUBSTANTIAL_ARABIC_LETTERS) return true;
     const letters = (text.match(LETTER) || []).length;
     return letters > 0 && arabic / letters >= MIN_RATIO;
   };
