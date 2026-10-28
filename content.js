@@ -1,4 +1,5 @@
 const POST_SELECTOR = [
+  '[componentkey^="update-card"]',
   "div.feed-shared-update-v2",
   '[data-urn^="urn:li:activity"]',
   '[data-urn^="urn:li:share"]',

@@ -13,4 +13,4 @@ Chrome extension that hides Farsi-language posts from your LinkedIn feed.
 - `detect.js` flags text as Farsi when Arabic-script letters make up at least 30% of its letters
   and it contains a Persian-only marker (پ چ ژ گ ک ی or Persian digits), so Arabic posts are left alone.
 - `content.js` watches the feed with a `MutationObserver` and hides matching posts via `content.css`.
-- LinkedIn changes its markup often; if posts stop being hidden, update `POST_SELECTOR` in `content.js`.
+- LinkedIn changes its markup often. Posts are currently matched by `[componentkey^="update-card"]` (verified on the live feed, Oct 2026); if posts stop being hidden, update `POST_SELECTOR` in `content.js`.
