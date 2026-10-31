@@ -1,2 +1,7 @@
 dist/
 .DS_Store
+
+# KEEL
+.keel-tooling/.env
+.keel-tooling/.state/
+.keel-tooling/tailwind.js

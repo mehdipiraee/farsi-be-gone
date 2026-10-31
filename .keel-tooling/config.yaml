@@ -1,0 +1,64 @@
+# KEEL Configuration
+# Defines document types, templates, prompts, and dependencies
+
+documents:
+  mandate:
+    name: "Mandate"
+    prompt: ".keel-tooling/prompts/mandate_prompt.md"
+    template: ".keel-tooling/templates/mandate_template.md"
+    output: "keel/MANDATE.md"
+    upstream: []
+    downstream: []
+
+  definition:
+    name: "Definition"
+    prompt: ".keel-tooling/prompts/definition_prompt.md"
+    template: ".keel-tooling/templates/definition_template.md"
+    output: "keel/{scope}/definition.md"
+    upstream: []
+    downstream: ["design"]
+
+  design:
+    name: "Design"
+    mode: "ascii"   # "ascii" or "html"
+    prompt: ".keel-tooling/prompts/design_prompt.md"
+    template: ".keel-tooling/templates/design_template.md"
+    output: "keel/{scope}/design.md"
+    html_prompt: ".keel-tooling/prompts/design_prompt_html.md"
+    html_template: ".keel-tooling/templates/design_template.html"
+    html_output: "keel/{scope}/design.html"
+    upstream: ["definition"]
+    downstream: ["spec"]
+
+  spec:
+    name: "Spec"
+    prompt: ".keel-tooling/prompts/spec_prompt.md"
+    template: ".keel-tooling/templates/spec_template.md"
+    output: "keel/{scope}/spec.md"
+    upstream: ["definition", "design"]
+    downstream: ["plan"]
+
+  plan:
+    name: "Plan"
+    prompt: ".keel-tooling/prompts/plan_prompt.md"
+    template: ".keel-tooling/templates/plan_template.md"
+    output: "keel/{scope}/plan.md"
+    upstream: ["definition", "design", "spec"]
+    downstream: []
+
+# Test Configuration
+test:
+  prompt: ".keel-tooling/prompts/test_prompt.md"
+  test_plan_output: "keel/{scope}/test-plan.md"
+  output: "keel/{scope}/test"
+
+# LLM Configuration
+llm:
+  model: "claude-sonnet-4-20250514"
+  max_tokens: 4096
+  temperature: 1.0
+
+# Workflow Configuration
+workflow:
+  state_dir: ".keel-tooling/.state"
+  state_file: ".keel-tooling/.state/state.json"
