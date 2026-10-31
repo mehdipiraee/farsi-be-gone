@@ -1,0 +1,160 @@
+---
+name: keel.plan
+description: Generates a Plan document. Product plans sequence capabilities in build order. Capability plans have detailed build steps.
+disable-model-invocation: true
+---
+
+You are generating a Plan. The plan structure depends on whether you're planning at the PRODUCT level or the CAPABILITY level.
+
+IMPORTANT: Use file reading/glob tools, NOT shell commands. Do NOT use Bash to create directories — just write files directly with the Write tool and directories are created automatically. Be frictionless — if upstream docs are missing, generate them yourself rather than telling the user to run another command.
+
+## Scope Resolution (do this FIRST)
+
+1. Read `.keel-tooling/config.yaml` to find all document entries. Note prompts, templates, and output paths (contain `{scope}`).
+
+2. Check if `keel/product/definition.md` exists. If it does NOT exist, the user's request IS the product. Set scope to `product`. Do NOT create a capability scope when there is no product yet.
+
+3. If the product exists, determine capability scope:
+   - The user may have described what they want. Use that to infer scope.
+   - Glob for existing `keel/*/` docs. Check which scopes don't have `plan.md` yet.
+   - If exactly one scope is missing `plan.md`, that is the active scope.
+   - If the user's request matches an existing scope (by content), use that scope.
+   - If the user's request is something new — this is a new capability. Derive a kebab-case folder name from their description.
+   - Only ask the user if it's genuinely ambiguous between multiple scopes.
+
+3. Resolve all paths: replace `{scope}` in output paths.
+
+4. Determine plan type:
+   - If scope is `product` → PRODUCT PLAN.
+   - Otherwise → CAPABILITY PLAN.
+
+## Ensure Upstream Exists
+
+Check if `keel/{scope}/definition.md` and `keel/{scope}/spec.md` exist. For each missing doc, generate it now (read its prompt and template from config, use available context, write to disk, tell the user). Generate definition first, then spec.
+
+### Check if design is needed
+
+Read `keel/{scope}/definition.md`. Determine if the product has a user interface:
+
+- **Has UI** (web app, mobile app, dashboard, portal, etc.): check if `keel/{scope}/design.md` (or `design.html`) exists. If not, generate it before generating spec.
+- **No UI** (API, service, library, CLI, data pipeline, worker, daemon, etc.): skip design entirely. Do NOT generate a design document.
+
+## Generate
+
+1. Read the plan prompt file.
+2. Read the plan template file.
+3. Read the upstream documents — Definition, Spec, and Design (only if design exists / product has UI).
+4. If the output file already exists, read it — you are UPDATING.
+
+### Product Plan
+
+The product plan sequences which capabilities to build and in what order. It does NOT contain implementation steps.
+
+1. Read the product definition and spec (and design, if it exists).
+2. Identify all distinct capabilities described in these documents.
+3. For each capability, determine:
+   - A short kebab-case name (suitable as a folder name)
+   - A one-line description
+   - Dependencies on other capabilities
+4. Order from foundational (no dependencies) to complex (depends on earlier ones).
+5. **If Beads tracking is enabled** (`tracking.enabled: true` in config): Present the plan **inline in the conversation** as formatted markdown. Do NOT write it to `plan.md`. The plan content stays in conversation context for the Review and Beads Task Sync phases.
+6. **If Beads tracking is NOT enabled**: Write the plan to the resolved output path using this structure:
+
+```
+# Product Plan
+
+## Capability Sequence
+
+### 1. {capability-name}
+**Description:** {what this capability covers}
+**Depends on:** {nothing, or earlier capabilities}
+**Status:** not started
+
+### 2. {capability-name}
+...
+```
+
+### Capability Plan
+
+Detailed build steps for a single capability.
+
+1. Read the capability's definition and spec (and design, if it exists).
+2. Also read `keel/product/plan.md` to understand where this capability fits and what it depends on. If dependency capabilities have specs, skim them for interfaces this capability integrates with.
+3. Decompose into ordered steps from low to high complexity. Each step builds on the previous.
+4. Each step MUST have an **Acceptance Criteria** section — a bulleted list of testable conditions covering happy path, edge cases, and failure scenarios. Follow the guidance in the plan prompt for writing good criteria.
+5. **If Beads tracking is enabled** (`tracking.enabled: true` in config): Present the plan **inline in the conversation** as formatted markdown. Do NOT write it to `plan.md`. The plan content stays in conversation context for the Review and Beads Task Sync phases.
+6. **If Beads tracking is NOT enabled**: Write the plan to the resolved output path using the template structure.
+7. After writing (or presenting inline), if `keel/product/plan.md` exists, update this capability's status to `in progress` in the product plan.
+
+## Review
+
+**STOP HERE. Do NOT continue to Beads Task Sync until the user explicitly confirms they are happy with the plan.**
+
+**If Beads tracking is enabled:**
+Tell the user: "Here's the plan above. Please review it — reorder, split, or merge steps as needed. When you're happy, let me know and I'll create the Beads tasks."
+
+When the user responds:
+- If they request changes: revise the plan and re-present it inline in the conversation. STOP again to wait for further feedback.
+- If they explicitly confirm (e.g., "looks good", "approved", "let's go"): ONLY THEN proceed to Beads Task Sync, then tell them: "The plan is finalized. The next step is **`/keel.build`** to start building. Want me to run it?"
+
+**If Beads tracking is NOT enabled:**
+Tell the user: "I've written the plan to `{output path}`. Please review it — reorder, split, or merge steps as needed. When you're done, let me know and I'll read your changes."
+
+When the user responds:
+- If they request changes: re-read the file from disk, make the requested changes, write the updated file, and STOP again to wait for further feedback.
+- If they explicitly confirm (e.g., "looks good", "approved", "let's go"): ONLY THEN tell them: "The plan is finalized. The next step is **`/keel.build`** to start building. Want me to run it?"
+
+Then WAIT for the user's response. Do not proceed further in this skill. Do not create beads tasks. Do not suggest next steps beyond reviewing the plan. Your turn ends here.
+
+## Beads Task Sync (if tracking enabled)
+
+After the plan is finalized:
+
+1. Check the config already loaded in Scope Resolution. If `tracking.enabled` is `true`, continue. Otherwise skip this section entirely.
+
+2. Parse all steps from the plan generated above (already in conversation context). Do NOT read from `plan.md` — the plan content was presented inline and may have been revised during the Review phase.
+
+3. **For a Capability Plan:**
+   - Create a parent task:
+     `bd create "{scope}: Build Capability" -t task --json`
+   - Capture the parent ID from the JSON output.
+   - For each step in the plan, create a child task. Include the FULL step details (Build, Depends on, Acceptance Criteria fields) as the task description:
+     `bd create "{scope}: Step {N} - {step name}" -t task -d "{full step details: Build, Depends on, Acceptance Criteria}" --parent {parent-id} --json`
+   - Capture each child task's ID (the "step task ID") from the JSON output.
+   - **Create a test subtask for each step.** The test subtask is a child of the step task:
+     `bd create "{scope}: Step {N} - Tests" -t task -d "Write and run test scripts for Step {N} per the test prompt (.keel-tooling/prompts/test_prompt.md). Acceptance Criteria: {paste the acceptance criteria from the step}" --parent {step-task-id} --json`
+   - Capture each test subtask's ID.
+   - **Set up blocking:** the test subtask blocks its parent step task — the step CANNOT be closed until its tests pass:
+     `bd dep add {step-task-id} {test-subtask-id} --type blocks`
+   - Set up dependencies between sequential steps (step N blocks on step N-1):
+     `bd dep add {step-N-id} {step-N-minus-1-id} --type blocks`
+   - Label all tasks (step tasks AND test subtasks) with the scope:
+     `bd label add {task-id} keel:{scope}`
+
+4. **For a Product Plan:**
+   - For each capability in the sequence, include the full description:
+     `bd create "{capability-name}: Plan & Build" -t task -d "{description and dependency info}" --json`
+   - Set up dependency chains based on the "Depends on" field.
+   - Label all tasks with:
+     `bd label add {task-id} keel:product-plan`
+
+5. The Claude Code PostToolUse hook automatically refreshes `plan.md` as a status dashboard after each state-changing `bd` command. Do NOT manually regenerate `plan.md` — the hook handles it.
+
+6. Tell the user: "I've created {N} step tasks with {N} test subtasks — each step is blocked by its test subtask, so tests must pass before a step can close. `plan.md` now shows live status. Run `bd ready` to see what's unblocked."
+
+If any `bd` command fails, log a warning and continue — the plan details live in Beads, but the dashboard refresh is best-effort.
+
+### Product Plan Auto-Update
+
+If the product plan already exists AND new capability folders have been added (glob for `keel/*/definition.md` and compare against capabilities listed in the plan):
+- Read the existing product plan.
+- Read the new capability's `definition.md`.
+- If Beads tracking is enabled (check `tracking.enabled` in config):
+  - Create a new Beads task for the capability: `bd create "{capability-name}: Plan & Build" -t task -d "{description}" --json`
+  - Label with `keel:product-plan`.
+  - Set up dependencies based on existing capability tasks.
+  - The hook automatically refreshes `plan.md` after each `bd` command.
+- If Beads tracking is NOT enabled:
+  - Add the new capability to the sequence in the appropriate position.
+  - Update the status of completed capabilities (those with all four docs: definition.md, design.md, spec.md, plan.md) to `complete`.
+  - Write the updated product plan.
